@@ -41,6 +41,8 @@ export default function AutotextApp() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const [copiedDefaultExam, setCopiedDefaultExam] = useState(false);
+
   const acuteItems = autotexts.filter((item) => item.category === "acute");
   const specialtyItems = autotexts.filter(
     (item) => item.category === "specialty",
@@ -198,6 +200,33 @@ export default function AutotextApp() {
     }
   };
 
+  const handleCopyDefaultExam = async () => {
+    const defaultExamText = `Gia đình đưa trẻ đến khám vì: 
+
+Tiền sử dị ứng:
+Thuốc đang dùng:
+- Trẻ tỉnh; tương tác tốt; Da niêm mạc hồng, không ban nốt; 
+- Dấu hiệu mất nước:  không 
+- Tuyến giáp: Không sờ thấy
+- Hạch ngoại vi: Không sờ thấy
+
+- Tim nhịp đều,  T1,T2 rõ; Refill <2s; Tưới máu ngoại biên tốt; Chi ấm; Mạch ngoại vi bắt rõ; Không tái tím 
+- Trẻ tự thở, môi hồng; Thông khí đều; Lồng ngực cân đối;  Không ran phổi; Không thở nhanh
+- Trẻ tri giác tỉnh, tương tác được; Hội chứng màng não âm tính; Không giảm trương lực cơ; Không yếu cơ; Đồng tử 2 bên 2mm, phản xạ ánh sáng dương tính, không liệt vận nhãn
+- Bụng mềm, không dấu hiệu bụng ngoại khoa, không nôn nhiều. Phản ứng thành bụng: không; Cảm ứng phúc mạc: Không; Không chướng hơi; Không có dấu hiệu quai ruột nổi 
+- Tiết niệu khám ngoài chưa ghi nhận bất thường
+- Không bầm tím bất thường; 
+- Khám tai mũi họng: `;
+
+    try {
+      await navigator.clipboard.writeText(defaultExamText);
+      setCopiedDefaultExam(true);
+      setTimeout(() => setCopiedDefaultExam(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy default exam text: ", err);
+    }
+  };
+
   const handleTranslate = async () => {
     if (!editableText || isEdited) return;
     setIsTranslating(true);
@@ -266,19 +295,32 @@ export default function AutotextApp() {
           <header className="bg-white/95 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-[#00529c] tracking-tight">
-                Autotext Dr.Son
+                Gõ Nhanh BS.Sơn
               </h1>
               <p className="text-slate-500 mt-2">
                 Chỉ dành cho BS. Đỗ Tiến Sơn trong thăm khám lâm sàng
               </p>
             </div>
-            <button
-              onClick={handleReset}
-              className="flex items-center justify-center px-4 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl font-medium transition-colors border border-rose-100"
-            >
-              <RefreshCcw className="w-4 h-4 mr-2" />
-              Phiên khám mới
-            </button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <button
+                onClick={handleCopyDefaultExam}
+                className="flex items-center justify-center px-4 py-2.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-xl font-medium transition-colors border border-amber-100"
+              >
+                {copiedDefaultExam ? (
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                ) : (
+                  <Copy className="w-4 h-4 mr-2" />
+                )}
+                {copiedDefaultExam ? "Đã copy Hỏi-Khám" : "Copy Hỏi-Khám"}
+              </button>
+              <button
+                onClick={handleReset}
+                className="flex items-center justify-center px-4 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl font-medium transition-colors border border-rose-100"
+              >
+                <RefreshCcw className="w-4 h-4 mr-2" />
+                Phiên khám mới
+              </button>
+            </div>
           </header>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
