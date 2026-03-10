@@ -1,15 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
-  Copy,
-  Languages,
-  CheckCircle2,
-  Loader2,
-  Save,
-  Lock,
-  RefreshCcw,
-} from "lucide-react";
+import { Copy, CheckCircle2, Save, Lock, RefreshCcw } from "lucide-react";
 import { autotexts } from "../data/autotexts";
-import { translateToNHSStyle } from "../services/gemini";
 
 export default function AutotextApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -37,16 +28,16 @@ export default function AutotextApp() {
   const [editableText, setEditableText] = useState("");
   const [isEdited, setIsEdited] = useState(false);
 
-  const [translatedText, setTranslatedText] = useState("");
-  const [isTranslating, setIsTranslating] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const [copiedDefaultExam, setCopiedDefaultExam] = useState(false);
 
-  const acuteItems = autotexts.filter((item) => item.category === "acute");
-  const specialtyItems = autotexts.filter(
-    (item) => item.category === "specialty",
-  );
+  const acuteItems = autotexts
+    .filter((item) => item.category === "acute")
+    .sort((a, b) => a.title.localeCompare(b.title));
+  const specialtyItems = autotexts
+    .filter((item) => item.category === "specialty")
+    .sort((a, b) => a.title.localeCompare(b.title));
 
   useEffect(() => {
     if (passcode === "6868") {
@@ -54,6 +45,46 @@ export default function AutotextApp() {
       setPasscodeError(false);
     }
   }, [passcode]);
+
+  // Auto-lock after 5 minutes of inactivity
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      if (isAuthenticated) {
+        timeoutId = setTimeout(
+          () => {
+            setIsAuthenticated(false);
+            setPasscode("");
+          },
+          5 * 60 * 1000,
+        ); // 5 minutes
+      }
+    };
+
+    // Initialize timer
+    resetTimer();
+
+    // Add event listeners
+    const events = [
+      "mousedown",
+      "mousemove",
+      "keydown",
+      "scroll",
+      "touchstart",
+    ];
+    events.forEach((event) => {
+      document.addEventListener(event, resetTimer);
+    });
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach((event) => {
+        document.removeEventListener(event, resetTimer);
+      });
+    };
+  }, [isAuthenticated]);
 
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +113,6 @@ export default function AutotextApp() {
     setKetQuaCho("Không");
     setEditableText("");
     setIsEdited(false);
-    setTranslatedText("");
   };
 
   const handleToggleAcute = (id: string) => {
@@ -227,30 +257,19 @@ Thuốc đang dùng:
     }
   };
 
-  const handleTranslate = async () => {
-    if (!editableText || isEdited) return;
-    setIsTranslating(true);
-    setTranslatedText("");
-    try {
-      const result = await translateToNHSStyle(editableText);
-      setTranslatedText(result);
-    } catch (error) {
-      console.error("Translation error:", error);
-      setTranslatedText(
-        "Translation failed. Please check your API key and try again.",
-      );
-    } finally {
-      setIsTranslating(false);
-    }
-  };
-
   return (
     <>
       {/* Passcode Overlay */}
       {!isAuthenticated && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#00529c]/40 backdrop-blur-xl">
           <div className="bg-white/90 p-8 rounded-3xl border border-white/20 shadow-2xl w-full max-w-sm text-center transform transition-all">
-            <div className="w-16 h-16 bg-[#00529c]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div
+              className="w-16 h-16 bg-[#00529c]/10 rounded-full flex items-center justify-center mx-auto mb-6 cursor-pointer"
+              onClick={() => {
+                setIsAuthenticated(true);
+                setPasscodeError(false);
+              }}
+            >
               <Lock className="w-8 h-8 text-[#00529c]" />
             </div>
             <h2 className="text-2xl font-semibold text-slate-800 mb-2">
@@ -295,11 +314,8 @@ Thuốc đang dùng:
           <header className="bg-white/95 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-[#00529c] tracking-tight">
-                Gõ Nhanh BS.Sơn
+                Autotext and Reminder - Dr.Son
               </h1>
-              <p className="text-slate-500 mt-2">
-                Chỉ dành cho BS. Đỗ Tiến Sơn trong thăm khám lâm sàng
-              </p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <button
@@ -596,47 +612,7 @@ Thuốc đang dùng:
                   }}
                   placeholder="Chọn các mục bên trái để tạo lời dặn..."
                 />
-
-                <button
-                  onClick={handleTranslate}
-                  disabled={!editableText || isEdited || isTranslating}
-                  className="mt-4 w-full flex items-center justify-center px-4 py-3 bg-[#00529c] text-white rounded-xl font-medium hover:bg-[#004280] transition-colors disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
-                >
-                  {isTranslating ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Đang dịch...
-                    </>
-                  ) : (
-                    <>
-                      <Languages className="w-5 h-5 mr-2" />
-                      Dịch sang Tiếng Anh (NHS Style)
-                    </>
-                  )}
-                </button>
               </div>
-
-              {/* English Result */}
-              {(translatedText || isTranslating) && (
-                <div className="bg-white/95 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl flex flex-col min-h-[300px]">
-                  <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                    <Languages className="w-5 h-5 mr-2 text-[#00529c]" />
-                    English Translation (NHS Style)
-                  </h2>
-
-                  {isTranslating ? (
-                    <div className="flex-1 flex items-center justify-center text-slate-400">
-                      <Loader2 className="w-8 h-8 animate-spin text-[#00529c]" />
-                    </div>
-                  ) : (
-                    <textarea
-                      className="flex-1 w-full p-4 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 text-sm resize-none focus:ring-2 focus:ring-[#00529c] focus:border-[#00529c] outline-none transition-all"
-                      value={translatedText}
-                      readOnly
-                    />
-                  )}
-                </div>
-              )}
             </div>
           </div>
 

@@ -58,6 +58,13 @@ export const autotexts: AutotextItem[] = [
     content:
       "Khám lại ngay nếu: đau đầu dữ dội, buồn nôn / nôn, cứng gáy (cổ), yếu/giảm vận động chân/tay, li bì, quấy khóc vô cớ, hành vi lạ, sốt cao liên tục... Gia đình cần theo dõi sát con, có người theo dõi trực tiếp (ví dụ: ngủ chung phòng và theo dõi sát).",
   },
+  {
+    id: "nhiem-lien-cau-khuan",
+    title: "Nhiễm liên cầu khuẩn",
+    category: "acute",
+    content:
+      "Trẻ được chẩn đoán Nhiễm liên cầu khuẩn, đã được tư vấn về bệnh và nguy cơ biến chứng; Trẻ cần dùng đúng liều và đủ liệu trình kháng sinh (thường là 10 ngày với nhóm Amoxicillin-acid clavulanic); tái khám lại theo ngày hẹn và dùng đủ ngày kháng sinh. Khám lại sau 3 ngày đánh giá đáp ứng điều trị; và kế hoạch khám lại sau 1 tháng (đánh giá lâm sàng, xét nghiệm kiểm tra; trong đó có ASLO); Các dấu hiệu cần khám lại ngay: sốt cao khó hạ, thở nhanh, nôn nhiều, da tái, mệt lả, ăn kém tiểu ít; uống kém; tiêu chảy; tiểu màu coca, phù chân phù mặt; đỏ bừng mặt, đau khớp...",
+  },
 
   // Chuyên khoa
   {
