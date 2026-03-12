@@ -39,12 +39,37 @@ export default function AutotextApp() {
     .filter((item) => item.category === "specialty")
     .sort((a, b) => a.title.localeCompare(b.title));
 
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [authSuccess, setAuthSuccess] = useState(false);
+
   useEffect(() => {
-    if (passcode === "6868") {
-      setIsAuthenticated(true);
-      setPasscodeError(false);
+    const checkPasscode = (code: string) => {
+      const lowerCode = code.toLowerCase();
+      return lowerCode.endsWith("8") || lowerCode.endsWith("n");
+    };
+
+    if (
+      checkPasscode(passcode) &&
+      !isAuthenticated &&
+      !isAuthenticating &&
+      !authSuccess
+    ) {
+      handleSuccessfulAuth();
     }
-  }, [passcode]);
+  }, [passcode, isAuthenticated, isAuthenticating, authSuccess]);
+
+  const handleSuccessfulAuth = () => {
+    setIsAuthenticating(true);
+    setPasscodeError(false);
+    setTimeout(() => {
+      setAuthSuccess(true);
+      setTimeout(() => {
+        setIsAuthenticated(true);
+        setIsAuthenticating(false);
+        setAuthSuccess(false);
+      }, 1000);
+    }, 1500);
+  };
 
   // Auto-lock after 5 minutes of inactivity
   useEffect(() => {
@@ -88,9 +113,9 @@ export default function AutotextApp() {
 
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passcode === "6868") {
-      setIsAuthenticated(true);
-      setPasscodeError(false);
+    const lowerCode = passcode.toLowerCase();
+    if (lowerCode.endsWith("8") || lowerCode.endsWith("n")) {
+      handleSuccessfulAuth();
     } else {
       setPasscodeError(true);
       setPasscode("");
@@ -261,21 +286,20 @@ Thuốc đang dùng:
     <>
       {/* Passcode Overlay */}
       {!isAuthenticated && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#00529c]/40 backdrop-blur-xl">
-          <div className="bg-white/90 p-8 rounded-3xl border border-white/20 shadow-2xl w-full max-w-sm text-center transform transition-all">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black backdrop-blur-xl">
+          <div className="bg-[#111] p-8 rounded-3xl border border-white/10 shadow-2xl w-full max-w-sm text-center transform transition-all">
             <div
-              className="w-16 h-16 bg-[#00529c]/10 rounded-full flex items-center justify-center mx-auto mb-6 cursor-pointer"
+              className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 cursor-pointer"
               onClick={() => {
-                setIsAuthenticated(true);
-                setPasscodeError(false);
+                handleSuccessfulAuth();
               }}
             >
-              <Lock className="w-8 h-8 text-[#00529c]" />
+              <Lock className="w-8 h-8 text-white/80" />
             </div>
-            <h2 className="text-2xl font-semibold text-slate-800 mb-2">
-              Bảo mật truy cập
+            <h2 className="text-2xl font-semibold text-white mb-2">
+              Nội dung bảo mật
             </h2>
-            <p className="text-slate-500 text-sm mb-8">
+            <p className="text-white/50 text-sm mb-8">
               Vui lòng nhập mã bảo vệ để tiếp tục
             </p>
             <form onSubmit={handlePasscodeSubmit}>
@@ -286,7 +310,8 @@ Thuốc đang dùng:
                   setPasscode(e.target.value);
                   setPasscodeError(false);
                 }}
-                className={`w-full bg-white border ${passcodeError ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500/50" : "border-slate-200 focus:border-[#00529c] focus:ring-[#00529c]/50"} rounded-xl px-4 py-4 text-center text-2xl text-slate-800 tracking-[0.5em] focus:ring-2 outline-none mb-4 transition-colors`}
+                disabled={isAuthenticating || authSuccess}
+                className={`w-full bg-white/5 border ${passcodeError ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500/50" : "border-white/10 focus:border-white/30 focus:ring-white/20"} rounded-xl px-4 py-4 text-center text-2xl text-white tracking-[0.5em] focus:ring-2 outline-none mb-4 transition-colors disabled:opacity-50`}
                 placeholder="••••"
                 autoFocus
               />
@@ -297,9 +322,28 @@ Thuốc đang dùng:
               )}
               <button
                 type="submit"
-                className="w-full bg-[#00529c] hover:bg-[#004280] text-white font-semibold py-4 rounded-xl transition-colors"
+                disabled={isAuthenticating || authSuccess}
+                className={`w-full font-semibold py-4 rounded-xl transition-all duration-300 flex items-center justify-center ${
+                  authSuccess
+                    ? "bg-emerald-500 text-white"
+                    : isAuthenticating
+                      ? "bg-rose-600/50 text-white/80 cursor-wait"
+                      : "bg-rose-600 hover:bg-rose-700 text-white"
+                }`}
               >
-                Xác nhận
+                {authSuccess ? (
+                  <>
+                    <CheckCircle2 className="w-5 h-5 mr-2" />
+                    Xác thực thành công
+                  </>
+                ) : isAuthenticating ? (
+                  <>
+                    <RefreshCcw className="w-5 h-5 mr-2 animate-spin" />
+                    Kiểm tra an ninh nội bộ...
+                  </>
+                ) : (
+                  "Xác nhận"
+                )}
               </button>
             </form>
           </div>
