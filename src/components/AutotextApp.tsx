@@ -291,7 +291,8 @@ Thuốc đang dùng:
             <div
               className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 cursor-pointer"
               onClick={() => {
-                handleSuccessfulAuth();
+                setIsAuthenticated(true);
+                setPasscodeError(false);
               }}
             >
               <Lock className="w-8 h-8 text-white/80" />
